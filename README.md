@@ -1,73 +1,122 @@
-# Welcome to your Lovable project
+# NyaySetu – AI Legal Access for Bharat
 
-## Project info
+## Problem
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+In India, most Supreme Court and High Court judgments are published in English. Millions of citizens — especially in rural areas — cannot understand their own legal rights due to language barriers. This creates a fundamental inequality in access to justice.
 
-## How can I edit this code?
+## Solution
 
-There are several ways of editing your application.
+NyaySetu bridges this gap using AI:
+- **Translate** court judgments into 10+ Indian languages
+- **Simplify** complex legal language to an 8th-grade reading level
+- **Guide** citizens on their legal rights, next steps, and relevant laws
 
-**Use Lovable**
+## Architecture
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+```
+┌─────────────────────────────┐
+│     React Frontend          │
+│  (Translate / Summarize /   │
+│   Legal Query / PDF Upload) │
+└──────────┬──────────────────┘
+           │ REST API (HTTP)
+┌──────────▼──────────────────┐
+│     FastAPI Backend          │
+│  ┌────────────────────────┐ │
+│  │  gemini_service.py     │ │
+│  │  (Gemini API calls)    │ │
+│  ├────────────────────────┤ │
+│  │  pdf_parser.py         │ │
+│  │  (pdfplumber)          │ │
+│  ├────────────────────────┤ │
+│  │  schemas.py            │ │
+│  │  (Pydantic models)     │ │
+│  └────────────────────────┘ │
+└─────────────────────────────┘
+```
 
-Changes made via Lovable will be committed automatically to this repo.
+## Folder Structure
 
-**Use your preferred IDE**
+```
+nyaysetu-ai-for-bharat/
+├── requirements.md
+├── design.md
+├── tasks.md
+├── README.md
+├── backend/
+│   ├── main.py
+│   ├── gemini_service.py
+│   ├── schemas.py
+│   ├── pdf_parser.py
+│   ├── requirements.txt
+│   └── .env.example
+└── src/                     # React frontend
+    ├── pages/Index.tsx
+    ├── components/
+    │   ├── HeroSection.tsx
+    │   ├── TranslatePanel.tsx
+    │   ├── SummarizePanel.tsx
+    │   ├── LegalQueryPanel.tsx
+    │   └── PdfUploader.tsx
+    └── lib/api.ts
+```
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## Setup Instructions
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Backend
 
-Follow these steps:
+```bash
+cd backend
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+cp .env.example .env
+# Edit .env and add your GEMINI_API_KEY
+uvicorn main:app --reload
+```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### Frontend
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+The React frontend runs on Vite. By default it calls `http://localhost:8000`.
 
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+```bash
+npm install
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+To set a custom backend URL, set `VITE_API_URL` environment variable.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Environment Variables
 
-**Use GitHub Codespaces**
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `GEMINI_API_KEY` | Yes | Google Gemini API key from [Google AI Studio](https://aistudio.google.com/apikey) |
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## API Endpoints
 
-## What technologies are used for this project?
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/translate` | Translate legal text to an Indian language |
+| POST | `/summarize` | Simplify legal text into plain language |
+| POST | `/legal-query` | Get legal guidance for a citizen's issue |
+| POST | `/upload-pdf` | Extract text from a PDF document |
 
-This project is built with:
+### Example
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+```bash
+curl -X POST http://localhost:8000/translate \
+  -H "Content-Type: application/json" \
+  -d '{"text": "The court hereby dismisses the appeal.", "target_language": "hindi"}'
+```
 
-## How can I deploy this project?
+## Hackathon Alignment
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+NyaySetu addresses **SDG 16: Peace, Justice, and Strong Institutions** by making legal information accessible to all citizens regardless of language.
 
-## Can I connect a custom domain to my Lovable project?
+## Disclaimer
 
-Yes, you can!
+This is an AI-powered informational tool. It does **not** provide legal advice. Always consult a licensed advocate.
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+---
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Built with ❤️ for Bharat 🇮🇳
