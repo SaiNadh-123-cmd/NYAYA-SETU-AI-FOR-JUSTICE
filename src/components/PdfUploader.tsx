@@ -1,6 +1,5 @@
 import { useState, useRef } from "react";
 import { Upload, FileText, Loader2, X } from "lucide-react";
-import { uploadPdf } from "@/lib/api";
 
 interface PdfUploaderProps {
   onTextExtracted: (text: string) => void;
@@ -30,8 +29,12 @@ const PdfUploader = ({ onTextExtracted }: PdfUploaderProps) => {
     setLoading(true);
     setError("");
     try {
-      const result = await uploadPdf(file);
-      onTextExtracted(result.extracted_text);
+      const text = await file.text();
+      if (!text.trim()) {
+        setError("Could not extract text from this PDF. Try pasting the text directly.");
+        return;
+      }
+      onTextExtracted(text);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Upload failed");
     } finally {
