@@ -1,4 +1,5 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 export interface TranslateRequest {
   text: string;
@@ -33,43 +34,32 @@ export interface LegalQueryResponse {
   disclaimer: string;
 }
 
-async function apiCall<T>(endpoint: string, body: unknown): Promise<T> {
-  const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+async function edgeCall<T>(functionName: string, body: unknown): Promise<T> {
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/${functionName}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${SUPABASE_KEY}`,
+    },
     body: JSON.stringify(body),
   });
   if (!res.ok) {
-    const err = await res.json().catch(() => ({ detail: "Unknown error" }));
-    throw new Error(err.detail || `API error: ${res.status}`);
+    const err = await res.json().catch(() => ({ error: "Unknown error" }));
+    throw new Error(err.error || err.detail || `API error: ${res.status}`);
   }
   return res.json();
 }
 
 export async function translateText(data: TranslateRequest): Promise<TranslateResponse> {
-  return apiCall("/translate", data);
+  return edgeCall("translate", data);
 }
 
 export async function summarizeText(data: SummarizeRequest): Promise<SummarizeResponse> {
-  return apiCall("/summarize", data);
+  return edgeCall("summarize", data);
 }
 
 export async function legalQuery(data: LegalQueryRequest): Promise<LegalQueryResponse> {
-  return apiCall("/legal-query", data);
-}
-
-export async function uploadPdf(file: File): Promise<{ extracted_text: string }> {
-  const formData = new FormData();
-  formData.append("file", file);
-  const res = await fetch(`${API_BASE_URL}/upload-pdf`, {
-    method: "POST",
-    body: formData,
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ detail: "Upload failed" }));
-    throw new Error(err.detail || `Upload error: ${res.status}`);
-  }
-  return res.json();
+  return edgeCall("legal-query", data);
 }
 
 export const SUPPORTED_LANGUAGES = [
