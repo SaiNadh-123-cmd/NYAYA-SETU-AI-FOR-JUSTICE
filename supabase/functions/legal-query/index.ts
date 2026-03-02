@@ -30,7 +30,7 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `You are an Indian legal information assistant. A citizen has described their issue. Provide legal guidance in ${language} language. Respond in ONLY valid JSON format: {"case_category": "Type of legal case", "recommended_lawyer_type": "Type of lawyer to consult", "relevant_constitutional_articles": ["Article X"], "relevant_acts": ["Act Name"], "action_checklist": ["Step 1", "Step 2"], "disclaimer": "This is AI-generated legal information and not a substitute for a licensed advocate. Please consult a qualified lawyer for legal advice."}`,
+            content: `You are an Indian legal information assistant. A citizen has described their issue. Provide legal guidance in ${language} language. Respond in ONLY valid JSON format: {"case_category": "Type of legal case", "recommended_lawyer_types": [{"type": "Lawyer type name", "why": "Brief reason why this type of lawyer is relevant to the case", "what_they_do": "What this lawyer specializes in"}], "relevant_constitutional_articles": ["Article X"], "relevant_acts": ["Act Name"], "action_checklist": ["Step 1", "Step 2"], "disclaimer": "This is AI-generated legal information and not a substitute for a licensed advocate. Please consult a qualified lawyer for legal advice."}. IMPORTANT: recommended_lawyer_types must contain 2-4 lawyer categories ranked by relevance.`,
           },
           { role: "user", content: user_issue },
         ],
@@ -59,7 +59,7 @@ serve(async (req) => {
     } catch {
       parsed = {
         case_category: "Unknown",
-        recommended_lawyer_type: "General Practice Lawyer",
+        recommended_lawyer_types: [{ type: "General Practice Lawyer", why: "Can handle a wide range of legal issues", what_they_do: "Provides general legal advice and representation" }],
         relevant_constitutional_articles: [],
         relevant_acts: [],
         action_checklist: ["Consult a licensed advocate for personalized advice."],

@@ -1,20 +1,13 @@
 import { useState } from "react";
-import { HelpCircle, Loader2, AlertTriangle, Scale, BookOpen, ListChecks } from "lucide-react";
-import { legalQuery, SUPPORTED_LANGUAGES } from "@/lib/api";
+import { HelpCircle, Loader2, AlertTriangle, Scale, BookOpen, ListChecks, UserCheck } from "lucide-react";
+import { legalQuery, SUPPORTED_LANGUAGES, type LegalQueryResponse } from "@/lib/api";
 
 const LegalQueryPanel = () => {
   const [issue, setIssue] = useState("");
   const [language, setLanguage] = useState("hindi");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [result, setResult] = useState<{
-    case_category: string;
-    recommended_lawyer_type: string;
-    relevant_constitutional_articles: string[];
-    relevant_acts: string[];
-    action_checklist: string[];
-    disclaimer: string;
-  } | null>(null);
+  const [result, setResult] = useState<LegalQueryResponse | null>(null);
 
   const handleQuery = async () => {
     if (!issue.trim()) return;
@@ -68,23 +61,41 @@ const LegalQueryPanel = () => {
 
       {result && (
         <div className="space-y-4 animate-fade-in">
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="p-5 rounded-xl gradient-card border border-border">
-              <div className="flex items-center gap-2 mb-2">
-                <Scale className="w-4 h-4 text-primary" />
-                <h3 className="font-heading font-bold text-foreground">Case Category</h3>
-              </div>
-              <p className="text-sm text-foreground/80 font-body">{result.case_category}</p>
+          {/* Case Category */}
+          <div className="p-5 rounded-xl gradient-card border border-border">
+            <div className="flex items-center gap-2 mb-2">
+              <Scale className="w-4 h-4 text-primary" />
+              <h3 className="font-heading font-bold text-foreground">Case Category</h3>
             </div>
-            <div className="p-5 rounded-xl gradient-card border border-border">
-              <div className="flex items-center gap-2 mb-2">
-                <Scale className="w-4 h-4 text-primary" />
-                <h3 className="font-heading font-bold text-foreground">Recommended Lawyer</h3>
-              </div>
-              <p className="text-sm text-foreground/80 font-body">{result.recommended_lawyer_type}</p>
+            <p className="text-sm text-foreground/80 font-body">{result.case_category}</p>
+          </div>
+
+          {/* Suggested Lawyer Categories */}
+          <div className="p-5 rounded-xl gradient-card border border-border">
+            <div className="flex items-center gap-2 mb-4">
+              <UserCheck className="w-4 h-4 text-primary" />
+              <h3 className="font-heading font-bold text-foreground">Suggested Lawyer Categories</h3>
+            </div>
+            <div className="grid gap-3">
+              {result.recommended_lawyer_types?.map((lawyer, i) => (
+                <div
+                  key={i}
+                  className="p-4 rounded-lg bg-background border border-border/60 flex items-start gap-3"
+                >
+                  <span className="w-7 h-7 rounded-full gradient-saffron text-primary-foreground flex items-center justify-center flex-shrink-0 text-xs font-bold mt-0.5">
+                    {i + 1}
+                  </span>
+                  <div className="space-y-1">
+                    <p className="font-heading font-bold text-sm text-foreground">{lawyer.type}</p>
+                    <p className="text-xs text-muted-foreground font-body">{lawyer.what_they_do}</p>
+                    <p className="text-xs text-primary font-body italic">Why: {lawyer.why}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 
+          {/* Relevant Laws */}
           <div className="p-5 rounded-xl gradient-card border border-border">
             <div className="flex items-center gap-2 mb-3">
               <BookOpen className="w-4 h-4 text-primary" />
@@ -110,6 +121,7 @@ const LegalQueryPanel = () => {
             </div>
           </div>
 
+          {/* Action Checklist */}
           <div className="p-5 rounded-xl gradient-card border border-border">
             <div className="flex items-center gap-2 mb-3">
               <ListChecks className="w-4 h-4 text-primary" />
@@ -127,6 +139,7 @@ const LegalQueryPanel = () => {
             </ul>
           </div>
 
+          {/* Disclaimer */}
           <div className="p-4 rounded-xl bg-warning/10 border border-warning/30 flex items-start gap-3">
             <AlertTriangle className="w-5 h-5 text-warning flex-shrink-0 mt-0.5" />
             <p className="text-sm text-foreground/70 font-body italic">{result.disclaimer}</p>

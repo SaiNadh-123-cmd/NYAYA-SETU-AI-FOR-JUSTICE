@@ -25,9 +25,15 @@ export interface LegalQueryRequest {
   language: string;
 }
 
+export interface LawyerType {
+  type: string;
+  why: string;
+  what_they_do: string;
+}
+
 export interface LegalQueryResponse {
   case_category: string;
-  recommended_lawyer_type: string;
+  recommended_lawyer_types: LawyerType[];
   relevant_constitutional_articles: string[];
   relevant_acts: string[];
   action_checklist: string[];
