@@ -1,7 +1,5 @@
 import { useRef, useState } from "react";
-import { Languages, FileText, HelpCircle, Scale, LogOut } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+import { Languages, FileText, HelpCircle, Scale } from "lucide-react";
 import HeroSection from "@/components/HeroSection";
 import TranslatePanel from "@/components/TranslatePanel";
 import SummarizePanel from "@/components/SummarizePanel";
@@ -18,20 +16,13 @@ type TabId = (typeof tabs)[number]["id"];
 const Index = () => {
   const [activeTab, setActiveTab] = useState<TabId>("translate");
   const toolsRef = useRef<HTMLDivElement>(null);
-  const navigate = useNavigate();
 
   const scrollToTools = () => {
     toolsRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate("/auth");
-  };
-
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="bg-secondary text-secondary-foreground px-4 py-3">
         <div className="container flex items-center gap-3">
           <Scale className="w-5 h-5 text-primary" />
@@ -39,22 +30,13 @@ const Index = () => {
           <span className="text-xs text-secondary-foreground/60 font-body ml-auto hidden sm:block">
             AI Legal Access for Bharat
           </span>
-          <button
-            onClick={handleLogout}
-            className="ml-3 flex items-center gap-1 text-xs text-secondary-foreground/60 hover:text-secondary-foreground transition-colors font-body"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Sign Out</span>
-          </button>
         </div>
       </header>
 
       <HeroSection onScrollToTools={scrollToTools} />
 
-      {/* Tool Section */}
       <section ref={toolsRef} className="container py-12 md:py-16">
         <div className="max-w-4xl mx-auto">
-          {/* Tabs */}
           <div className="flex gap-1 p-1 bg-muted rounded-xl mb-8">
             {tabs.map((tab) => (
               <button
@@ -72,7 +54,6 @@ const Index = () => {
             ))}
           </div>
 
-          {/* Panel */}
           <div className="animate-fade-in" key={activeTab}>
             {activeTab === "translate" && <TranslatePanel />}
             {activeTab === "summarize" && <SummarizePanel />}
@@ -81,7 +62,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Footer */}
       <footer className="bg-secondary text-secondary-foreground/60 py-6 mt-8">
         <div className="container text-center text-xs font-body space-y-2">
           <p>NyaySetu — AI-powered legal information tool. Not a substitute for professional legal advice.</p>
