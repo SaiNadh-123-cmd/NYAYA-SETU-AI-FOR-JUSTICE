@@ -1,5 +1,7 @@
 import { useRef, useState } from "react";
-import { Languages, FileText, HelpCircle, Scale } from "lucide-react";
+import { Languages, FileText, HelpCircle, Scale, LogOut } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 import HeroSection from "@/components/HeroSection";
 import TranslatePanel from "@/components/TranslatePanel";
 import SummarizePanel from "@/components/SummarizePanel";
@@ -16,9 +18,15 @@ type TabId = (typeof tabs)[number]["id"];
 const Index = () => {
   const [activeTab, setActiveTab] = useState<TabId>("translate");
   const toolsRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
   const scrollToTools = () => {
     toolsRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate("/auth");
   };
 
   return (
@@ -31,6 +39,13 @@ const Index = () => {
           <span className="text-xs text-secondary-foreground/60 font-body ml-auto hidden sm:block">
             AI Legal Access for Bharat
           </span>
+          <button
+            onClick={handleLogout}
+            className="ml-3 flex items-center gap-1 text-xs text-secondary-foreground/60 hover:text-secondary-foreground transition-colors font-body"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Sign Out</span>
+          </button>
         </div>
       </header>
 

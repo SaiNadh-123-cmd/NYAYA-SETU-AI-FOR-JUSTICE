@@ -1,5 +1,4 @@
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+import { supabase } from "@/integrations/supabase/client";
 
 export interface TranslateRequest {
   text: string;
@@ -41,19 +40,15 @@ export interface LegalQueryResponse {
 }
 
 async function edgeCall<T>(functionName: string, body: unknown): Promise<T> {
-  const res = await fetch(`${SUPABASE_URL}/functions/v1/${functionName}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${SUPABASE_KEY}`,
-    },
-    body: JSON.stringify(body),
+  const { data, error } = await supabase.functions.invoke(functionName, {
+    body,
   });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: "Unknown error" }));
-    throw new Error(err.error || err.detail || `API error: ${res.status}`);
+
+  if (error) {
+    throw new Error(error.message || `API error calling ${functionName}`);
   }
-  return res.json();
+
+  return data as T;
 }
 
 export async function translateText(data: TranslateRequest): Promise<TranslateResponse> {
