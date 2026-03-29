@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { HelpCircle, Loader2, AlertTriangle, Scale, BookOpen, ListChecks, UserCheck } from "lucide-react";
-import { legalQuery, SUPPORTED_LANGUAGES, type LegalQueryResponse } from "@/lib/api";
+import { legalQuery, SUPPORTED_LANGUAGES, saveHistory, type LegalQueryResponse } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
 
 const LegalQueryPanel = () => {
   const [issue, setIssue] = useState("");
@@ -8,6 +9,8 @@ const LegalQueryPanel = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState<LegalQueryResponse | null>(null);
+
+  const { user } = useAuth();
 
   const handleQuery = async () => {
     if (!issue.trim()) return;
@@ -17,6 +20,9 @@ const LegalQueryPanel = () => {
     try {
       const res = await legalQuery({ user_issue: issue, language });
       setResult(res);
+      if (user) {
+        await saveHistory(user.id, "query", issue, res);
+      }
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Query failed");
     } finally {
@@ -58,6 +64,12 @@ const LegalQueryPanel = () => {
       </div>
 
       {error && <p className="text-sm text-destructive">{error}</p>}
+
+      {!user && result && (
+        <p className="text-xs text-muted-foreground mt-2 font-body italic text-center">
+          Guest mode: This query result will be lost when you leave. Sign in to save your history.
+        </p>
+      )}
 
       {result && (
         <div className="space-y-4 animate-fade-in">

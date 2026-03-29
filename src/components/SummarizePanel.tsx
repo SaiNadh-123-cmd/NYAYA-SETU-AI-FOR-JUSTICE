@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { FileText, Loader2 } from "lucide-react";
-import { summarizeText } from "@/lib/api";
+import { summarizeText, saveHistory } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
 import PdfUploader from "./PdfUploader";
 
 const SummarizePanel = () => {
@@ -13,6 +14,8 @@ const SummarizePanel = () => {
     citizen_impact: string;
   } | null>(null);
 
+  const { user } = useAuth();
+
   const handleSummarize = async () => {
     if (!text.trim()) return;
     setLoading(true);
@@ -21,6 +24,9 @@ const SummarizePanel = () => {
     try {
       const res = await summarizeText({ text });
       setResult(res);
+      if (user) {
+        await saveHistory(user.id, "summarize", text, res);
+      }
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Summarization failed");
     } finally {
@@ -51,6 +57,12 @@ const SummarizePanel = () => {
       </button>
 
       {error && <p className="text-sm text-destructive">{error}</p>}
+
+      {!user && result && (
+        <p className="text-xs text-muted-foreground mt-2 font-body italic text-center">
+          Guest mode: This summary will be lost when you leave. Sign in to save your history.
+        </p>
+      )}
 
       {result && (
         <div className="space-y-4 animate-fade-in">

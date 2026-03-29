@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Languages, Loader2 } from "lucide-react";
-import { translateText, SUPPORTED_LANGUAGES } from "@/lib/api";
+import { translateText, SUPPORTED_LANGUAGES, saveHistory } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
 import PdfUploader from "./PdfUploader";
 
 const TranslatePanel = () => {
@@ -10,6 +11,8 @@ const TranslatePanel = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const { user } = useAuth();
+
   const handleTranslate = async () => {
     if (!text.trim()) return;
     setLoading(true);
@@ -18,6 +21,9 @@ const TranslatePanel = () => {
     try {
       const res = await translateText({ text, target_language: language });
       setResult(res.translated_text);
+      if (user) {
+        await saveHistory(user.id, "translate", text, res);
+      }
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Translation failed");
     } finally {
@@ -53,6 +59,11 @@ const TranslatePanel = () => {
             )}
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
+          {!user && result && (
+            <p className="text-xs text-muted-foreground mt-2 font-body italic">
+              Guest mode: This translation will be lost when you leave. Sign in to save your history.
+            </p>
+          )}
         </div>
       </div>
 

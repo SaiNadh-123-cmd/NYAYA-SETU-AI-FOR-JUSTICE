@@ -75,3 +75,22 @@ export const SUPPORTED_LANGUAGES = [
   { value: "punjabi", label: "ਪੰਜਾਬੀ (Punjabi)" },
   { value: "odia", label: "ଓଡ଼ିଆ (Odia)" },
 ];
+
+export async function saveHistory(
+  userId: string,
+  type: 'translate' | 'summarize' | 'query',
+  inputText: string,
+  resultData: any
+) {
+  // @ts-ignore - bypassing generated types mismatch since we created this table via direct sql migration
+  const { error } = await supabase.from('saved_queries').insert({
+    user_id: userId,
+    type,
+    input_text: inputText,
+    result_data: resultData
+  });
+
+  if (error) {
+    console.error("Error saving history:", error);
+  }
+}
