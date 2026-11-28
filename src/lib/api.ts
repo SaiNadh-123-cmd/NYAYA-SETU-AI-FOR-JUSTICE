@@ -76,14 +76,26 @@ export const SUPPORTED_LANGUAGES = [
   { value: "odia", label: "ଓଡ଼ିଆ (Odia)" },
 ];
 
+interface SavedQueryInsert {
+  user_id: string;
+  type: "translate" | "summarize" | "query";
+  input_text: string;
+  result_data: unknown;
+}
+
+const insertSavedQuery = supabase.from.bind(supabase) as unknown as (
+  table: "saved_queries",
+) => {
+  insert(values: SavedQueryInsert): PromiseLike<{ error: { message: string } | null }>;
+};
+
 export async function saveHistory(
   userId: string,
   type: 'translate' | 'summarize' | 'query',
   inputText: string,
-  resultData: any
+  resultData: unknown
 ) {
-  // @ts-ignore - bypassing generated types mismatch since we created this table via direct sql migration
-  const { error } = await supabase.from('saved_queries').insert({
+  const { error } = await insertSavedQuery('saved_queries').insert({
     user_id: userId,
     type,
     input_text: inputText,
