@@ -1,4 +1,19 @@
-import { supabase } from "@/integrations/supabase/client";
+const API_BASE = import.meta.env.VITE_API_URL || "";
+
+async function apiCall<T>(path: string, body: unknown): Promise<T> {
+  const res = await fetch(`${API_BASE}/.netlify/functions/${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    throw new Error(error.error || `API error calling ${path}`);
+  }
+
+  return res.json() as Promise<T>;
+}
 
 export interface TranslateRequest {
   text: string;
@@ -39,28 +54,16 @@ export interface LegalQueryResponse {
   disclaimer: string;
 }
 
-async function edgeCall<T>(functionName: string, body: unknown): Promise<T> {
-  const { data, error } = await supabase.functions.invoke(functionName, {
-    body,
-  });
-
-  if (error) {
-    throw new Error(error.message || `API error calling ${functionName}`);
-  }
-
-  return data as T;
-}
-
 export async function translateText(data: TranslateRequest): Promise<TranslateResponse> {
-  return edgeCall("translate", data);
+  return apiCall("translate", data);
 }
 
 export async function summarizeText(data: SummarizeRequest): Promise<SummarizeResponse> {
-  return edgeCall("summarize", data);
+  return apiCall("summarize", data);
 }
 
 export async function legalQuery(data: LegalQueryRequest): Promise<LegalQueryResponse> {
-  return edgeCall("legal-query", data);
+  return apiCall("legal-query", data);
 }
 
 export const SUPPORTED_LANGUAGES = [
@@ -83,26 +86,25 @@ interface SavedQueryInsert {
   result_data: unknown;
 }
 
-const insertSavedQuery = supabase.from.bind(supabase) as unknown as (
-  table: "saved_queries",
-) => {
-  insert(values: SavedQueryInsert): PromiseLike<{ error: { message: string } | null }>;
-};
-
 export async function saveHistory(
   userId: string,
   type: 'translate' | 'summarize' | 'query',
   inputText: string,
   resultData: unknown
 ) {
-  const { error } = await insertSavedQuery('saved_queries').insert({
-    user_id: userId,
-    type,
-    input_text: inputText,
-    result_data: resultData
-  });
+  try {
+    const { supabase } = await import("@/integrations/supabase/client");
+    const { error } = await supabase.from("saved_queries").insert({
+      user_id: userId,
+      type,
+      input_text: inputText,
+      result_data: resultData,
+    } as SavedQueryInsert);
 
-  if (error) {
-    console.error("Error saving history:", error);
+    if (error) {
+      console.error("Error saving history:", error);
+    }
+  } catch {
+    // History is optional; never block the AI tools if Supabase is unavailable.
   }
 }

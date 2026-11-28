@@ -16,37 +16,20 @@ serve(async (req) => {
       });
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
+    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+    if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY not configured");
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          {
-            role: "system",
-            content: `You are a legal translation expert specializing in Indian law. Translate the following legal text from English to ${target_language}. RULES: Preserve all legal terminology accurately. Do NOT simplify or summarize — translate faithfully. Maintain paragraph structure. If a legal term has no direct translation, keep the English term in parentheses. Respond with ONLY the translated text, no explanations.`,
-          },
-          { role: "user", content: text },
-        ],
+        contents: [{ parts: [{ text: `You are a legal translation expert specializing in Indian law. Translate the following legal text from English to ${target_language}. RULES: Preserve all legal terminology accurately. Do NOT simplify or summarize — translate faithfully. Maintain paragraph structure. If a legal term has no direct translation, keep the English term in parentheses. Respond with ONLY the translated text, no explanations.\n\n${text}` }] }],
       }),
     });
-
-    if (!response.ok) {
-      const errText = await response.text();
-      console.error("AI gateway error:", response.status, errText);
-      return new Response(JSON.stringify({ error: "Unable to process request" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
     const aiData = await response.json();
-    const translated_text = aiData.choices?.[0]?.message?.content?.trim() || "";
+    const translated_text = (aiData.candidates?.[0]?.content?.parts?.[0]?.text || "").trim();
 
     return new Response(JSON.stringify({ translated_text }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

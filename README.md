@@ -63,34 +63,58 @@ nyaysetu-ai-for-bharat/
 
 ## Setup Instructions
 
-### Backend
+### Frontend (Vite + React)
 
-```bash
-cd backend
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-pip install -r requirements.txt
-cp .env.example .env
-# Edit .env and add your GEMINI_API_KEY
-uvicorn main:app --reload
-```
-
-### Frontend
-
-The React frontend runs on Vite. By default it calls `http://localhost:8000`.
+The frontend is a static Vite site. It calls the AI endpoints (`translate`, `summarize`, `legal-query`) exposed as Netlify functions.
 
 ```bash
 npm install
-npm run dev
+npm run dev        # local dev (http://localhost:8080)
+npm run build      # production build -> dist/
+npm run preview    # preview production build
 ```
 
-To set a custom backend URL, set `VITE_API_URL` environment variable.
+### Backend / AI (Netlify serverless functions)
+
+The three AI tools run as Netlify functions under `netlify/functions/` and call Google Gemini directly:
+
+- `netlify/functions/translate.js`
+- `netlify/functions/summarize.js`
+- `netlify/functions/legal-query.js`
+
+Set `GEMINI_API_KEY` in your Netlify site environment variables (get a free key at [Google AI Studio](https://aistudio.google.com/apikey)).
 
 ### Environment Variables
 
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `GEMINI_API_KEY` | Yes | Google Gemini API key from [Google AI Studio](https://aistudio.google.com/apikey) |
+| `VITE_SUPABASE_URL` | No | Supabase project URL (optional auth & saved history) |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | No | Supabase anon key (optional auth & saved history) |
+| `VITE_API_URL` | No | Custom backend URL (defaults to same origin / Netlify functions) |
+
+Copy `.env.example` to `.env` locally for development.
+
+## Deploy on Netlify
+
+1. Push this repository to GitHub.
+2. In [Netlify](https://netlify.com), click **Add new site → Import an existing project** and connect your GitHub repo.
+3. Build settings are detected from `netlify.toml`:
+   - Build command: `npm run build`
+   - Publish directory: `dist`
+   - Functions directory: `netlify/functions`
+4. Add the environment variables above (especially `GEMINI_API_KEY`) in **Site settings → Environment variables**.
+5. Deploy.
+
+The site will be live on your Netlify URL with the AI tools powered by serverless functions — no Lovable, no vendor lock-in.
+
+### Deploy via Netlify CLI
+
+```bash
+npm install -g netlify-cli
+netlify init
+netlify deploy --build --prod
+```
 
 ## API Endpoints
 

@@ -16,37 +16,27 @@ serve(async (req) => {
       });
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
+    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+    if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY not configured");
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          {
-            role: "system",
-            content: `You are a legal document simplifier for Indian citizens. Summarize the following legal text for a citizen with an 8th-grade reading level. Respond in ONLY valid JSON format: {"simple_summary": "A plain-language summary in 3-5 sentences", "key_points": ["Point 1", "Point 2", "Point 3"], "citizen_impact": "How this affects ordinary citizens in 2-3 sentences"}`,
-          },
-          { role: "user", content: text },
-        ],
+        contents: [{ parts: [{ text: `You are a legal document simplifier for Indian citizens. Summarize the following legal text for a citizen with an 8th-grade reading level. Respond in ONLY valid JSON format: {"simple_summary": "A plain-language summary in 3-5 sentences", "key_points": ["Point 1", "Point 2", "Point 3"], "citizen_impact": "How this affects ordinary citizens in 2-3 sentences"}\n\n${text}` }] }],
       }),
     });
 
     if (!response.ok) {
       const errText = await response.text();
-      console.error("AI gateway error:", response.status, errText);
+      console.error("Gemini error:", response.status, errText);
       return new Response(JSON.stringify({ error: "Unable to process request" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const aiData = await response.json();
-    const content = aiData.choices?.[0]?.message?.content?.trim() || "";
+    const content = (aiData.candidates?.[0]?.content?.parts?.[0]?.text || "").trim();
 
     let parsed;
     try {
